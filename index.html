@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <title>
+        Preview
+    </title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="Content-Script-Type" content="text/javascript" />
+    <meta http-equiv="Content-Style-Type" content="text/css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.3.0/css/font-awesome.css" type="text/css" rel="stylesheet" />
+    <style>
+      html {
+          background: #F5F5F5;
+      }
+
+      body {
+          margin: 0;
+          background: #F5F5F5;
+          background: linear-gradient(#CCCCD3,#F5F5F5);
+      }
+
+      a,
+      a:link,
+      a:visited {
+          color: #AAA;
+      }
+
+      .DevicePreviewPanel {
+          background: #000;
+          color: white;
+          padding: 5px 20px;
+          line-height: 45px;    
+          font-weight: 300;
+          position: relative;
+          font-size: 14px;
+          white-space: nowrap;
+      }
+
+      .LeftOptionsPanel {   
+          background: rgba(0,0,0,0.8);
+          width: 100px;
+          position: fixed;
+          left: 0px;    
+          top: 65px;
+          margin: 0px;    
+          font-size: 14px;
+          border-bottom-right-radius: 20px;
+          border-top-right-radius: 20px;
+          box-shadow: 0px 0px 10px 2px #222;
+          z-index: 1;
+          -webkit-transition: height 0.3s ease;                  
+          -moz-transition: height 0.3s ease;                     
+          -ms-transition: height 0.3s ease;          
+          transition: height 0.3s ease;
+      }
+
+      .OptionSection {
+          border-top: 1px solid #AAA;
+          padding: 20px 10px;
+          margin: 0px 10px;
+      }
+
+      .OptionSection.NoBorder {
+          border: none;   
+      }
+
+      .DevicePreviewPanel .Title {
+          font-size: 24px; 
+      }
+
+      .OptionSection.LargeIcons [class^=fa] {
+          font-size: 26px; 
+          line-height: 30px;
+      }
+
+      .OptionSection.ExtraLargeIcons [class^=fa] {
+          font-size: 34px; 
+      }
+
+      .Option {
+          position: relative;    
+      }
+
+      .Option:hover:after,
+      .Option.Selected:after {
+          content: ""; 
+          position: absolute;
+          left: -20px;   
+          top: 16px;
+          width: 0; 
+          height: 0; 
+          border-top: 8px solid transparent;
+          border-bottom: 8px solid transparent;    
+          border-left: 12px solid rgba(255,255,255,0.1);
+      }
+
+      .OptionSection .Option.Outdoors [class^=fa] {
+          color: #9DC3E5;   
+      }
+
+      .OptionSection .Option.Office [class^=fa] {
+          color: #C9C9C9;   
+      }
+
+      .OptionSection .Option.Indoors [class^=fa] {
+          color: #CC912A;   
+      }
+
+      .OptionSection .Option.BlackDevice [class^=fa] {
+          color: #666;   
+          font-weight: bold;
+          fobnt-size: 29px;    
+      }
+
+      .OptionSection .Option.WhiteDevice [class^=fa] {
+          color: #FFFFF0;   
+          font-weight: bold;
+          font-size: 29px;
+      }
+
+      .OptionSection .Option:hover,
+      .OptionSection .Option.SelectedOption,{
+          
+      }
+
+      .DevicePreviewPanel [class^=fa] {   
+          margin: 0px 8px;
+          vertical-align: middle;
+          color: #AAA;
+      }
+
+      .DevicePreviewPanel > div {
+          vertical-align: middle;   
+      }
+
+      .DevicePreviewPanel .fa-fw {
+          width: auto;   
+      }
+
+      .DevicePreviewPanel .TopSideActions {
+          padding-right: 40px;   
+      }
+
+      .DevicePreviewPanel .TopSideActions [class^=fa] {
+          font-size: 16px;
+          margin-right: 0px;
+      }
+
+      .DevicePreviewPanel .Active [class^=fa] {
+          color: white;   
+      }
+
+      .DevicePreviewPanel .Rotate {
+          transform: -webkit-rotate(90deg);
+          -webkit-transform: rotate(90deg);
+          -moz-transform: rotate(90deg);
+          -ms-transform: rotate(90deg);
+          filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=1);
+          display: inline-block;
+      }
+
+      body.Desktop .PreviewFrameWrapper .PreviewFrame {
+          box-shadow: none;
+      }
+
+      .PreviewFrame {
+          border: 60px solid #111;
+          border-radius: 20px;
+          margin: 50px 0px 80px 0px;
+          box-shadow: 0px 0px 10px 2px #222;
+          background: #222;
+          min-height: 100%;
+      }
+
+      .PreviewFrame.White {
+          border-color: #FFFFF0;   
+      }
+
+      .PreviewFrame iframe {
+          border-top: 2px solid #333;
+          border-right: 2px solid #333;
+          border-bottom: 2px solid #222;
+          border-left: 2px solid #222;   
+      }
+
+      .PreviewFrame.White iframe {
+          border-top: 1px solid #DDD;
+          border-right: 1px solid #DDD;
+          border-bottom: 1px solid #CCC;
+          border-left: 1px solid #CCC;  
+      }
+
+      .PreviewFrame iframe {
+          visibility: hidden;  /* display is set by the javascript, on ready event (avoid glimpse view of the scrollbar) */ 
+          width: 100%;
+          height: 100%;
+      }
+
+      body.Desktop .PreviewFrame {
+          border: none;
+          width: 100%;
+          height: 100%;
+          margin: 0px;
+      }
+
+      body.Desktop .PreviewFrame iframe {
+          border: none;
+      }
+
+      body.Laptop .PreviewFrame {
+          width: 1366px;
+          height: 768px;
+          border-bottom-width: 80px;
+      }
+
+      body.Tablet .PreviewFrame {
+          width: 768px;
+          height: 1024px;
+          border-bottom-width: 80px;
+      }
+
+      body.TabletLandscape .PreviewFrame {
+          height: 768px;
+          width: 1024px;
+          border-left-width: 80px;
+      }
+
+      body.Smartphone .PreviewFrame {
+          width: 320px;
+          height: 568px;
+          border-width: 15px;
+          border-top-width: 60px;
+          border-bottom-width: 60px;
+      }
+
+      body.SmartphoneLandscape .PreviewFrame {
+          width: 568px;
+          height: 320px;
+          border-width: 15px;
+          border-left-width: 60px;
+          border-right-width: 60px;
+          margin-top: 200px;
+      }
+
+      .PreviewFooter {
+          text-align: center;
+          padding: 10px;
+          color: #555;
+          background: transparent;
+          position: fixed;
+          bottom: 0px;
+          height: 46px;
+          box-sizing: border-box;
+
+          display:inline-block;    
+      }
+
+      .PreviewFooter.Expanded { 
+          background: #000;
+          background: rgba(0,0,0,0.93);
+          box-shadow: 0px -1px 2px #000;
+          width: 100%;
+      }
+
+      .PreviewFooter .ToolbarToggler {
+          display: block;    
+          font-size: 20px;
+      }
+
+      .PreviewFooter .ToolbarToggler a,
+      .PreviewFooter .ToolbarToggler a:link,
+      a.CloseToolbar,
+      a.CloseToolbar:link {
+          color: #888;
+          text-shadow: 0px 0px 3px #000;
+      }
+
+      .PreviewFooter .ToolbarToggler a:hover,
+      a.CloseToolbar :hover {
+          color: #FFF;
+      }
+
+      .PreviewFooter.Expanded .ToolbarToggler {
+          display: none; 
+
+      }
+
+      .PreviewFooter .Toolbar {
+          display: none;  
+
+      }
+
+      .PreviewFooter.Expanded .Toolbar {
+          display: block;    
+      }
+
+      .PreviewFooter [class^=fa] {   
+          vertical-align: middle;
+      }
+
+      .PreviewFooter input.TextRight {
+          text-align: right;
+      }
+
+      .CloseToolbar {
+          position: absolute;
+          left: 10px;
+
+          top: 10px;
+          font-size: 20px;
+      }
+
+      .glass {
+          display: inline-block;
+          position: relative; 
+          margin: 50px 0px;
+      }
+
+      .glass .PreviewFrame {
+          margin: 0px;  /* the margin is placed by the glass effect div */
+      }
+
+      .glass:after {
+          content: " "; 
+          display: block;
+          position: absolute;
+          top: 0; right: 0; bottom: 0; left: 0;
+          border: 1px solid rgba(255, 255, 255, 0.1); border-bottom: 0;
+          -webkit-background-origin: border-box;
+          -moz-background-origin: border;
+          background-origin: border-box;
+          background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(rgba(255, 255, 255, .01)), to(rgba(0, 0, 0,0.01))), -webkit-gradient(linear, left top, right bottom, color-stop(0, rgba(255, 255, 255, 0)), color-stop(0.5, rgba(255, 255, 255, .04)), color-stop(0.501, rgba(255, 255, 255, 0)), color-stop(1, rgba(255, 255, 255, 0)));
+          background: -moz-linear-gradient(top, rgba(255, 255, 255, .01), rgba(0, 0, 0, .01)), -moz-linear-gradient(left top, rgba(255, 255, 255, 0), rgba(255, 255, 255, .04) 50%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0));
+          background: linear-gradient(top, rgba(255, 255, 255, .01), rgba(0, 0, 0, .01)), linear-gradient(left top, rgba(255, 255, 255, 0), rgba(255, 255, 255, .04) 50%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0));
+          border-radius: 25px;
+          pointer-events:none;
+      }
+
+      html, body, form {
+          min-height: 100%;
+      }
+
+      body.Desktop .PreviewFrameWrapper {
+          left: 0px;
+          top: 0px;
+          right: 0px;
+          bottom: 4px;
+          position: absolute;
+          text-align: center;
+      }
+    </style>
+
+    <script src="https://code.jquery.com/jquery-1.11.2.min.js" type="text/javascript" charset="UTF-8"></script>
+</head>
+
+<body>
+
+    <div class="DevicePreviewPanel OpenMenu">
+        <div class="LeftOptionsPanel">
+            <div class="OptionSection ExtraLargeIcons NoBorder">
+                <div align="center">
+                    <div>
+                      <a class="Smartphone" title="Smartphone (320px)" alt="Smartphone (320px)"  data-device="Smartphone" href="#"><span class="fa fa-fw fa-mobile"></span></a>
+                    </div>
+                    <div>
+                      <a class="SmartphoneLandscape Rotate" title="Smartphone landscape (568px)" alt="Smartphone landscape (568px)" data-device="SmartphoneLandscape" href="#"><span class="fa fa-fw fa-mobile"></span></a>
+                    </div>
+                    <div>
+                      <a class="Tablet" title="Tablet portrait (768px)" alt="Tablet portrait (768px)" data-device="Tablet" href="#"><span class="fa fa-fw fa-tablet"></span></a>
+                    </div>
+                    <div>
+                      <a class="Desktop" title="Desktop and tablet landscape (>=1024px)" alt="Desktop and tablet landscape (>=1024px)" data-device="Desktop" href="#"><span class="fa fa-fw fa-desktop"></span></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div align="center" class="PreviewFrameWrapper">
+        <div style="height:100%">
+            <div class="PreviewFrame Black" style="">
+              <iframe id='contents_frame' frameborder='0' src='#' border='0' frameborder='0' marginwidth='0' marginheight='0' style='overflow-x:hidden;background:white;'></iframe>
+            </div>
+        </div>
+    </div>
+<script type="text/javascript">
+  $(document).ready(function(){
+    var paramsArray = (window.location.search.substr(1) || '').split('&');
+    window.params = {};
+    for(var i=0; i < paramsArray.length; i++) {
+      var split = paramsArray[i].split('=');
+      window.params[split[0].toLowerCase()] = split[1];
+    }
+
+    var device = window.params.device || 'Smartphone';
+    $('body').addClass(device);
+    $('.LeftOptionsPanel a.' + device).addClass('Active');
+    $('.LeftOptionsPanel a').each(function(){
+      $(this).click(function(e){
+        e.preventDefault();
+        var currentDevice = $('.LeftOptionsPanel a.Active').removeClass('Active').data('device');
+        var newDevice = $(this).data('device');
+        $('.LeftOptionsPanel a.' + newDevice).addClass('Active');
+        $('body').removeClass(currentDevice).addClass(newDevice);
+      });      
+    });
+
+    var url = window.params.url;
+    $('#contents_frame').attr('src', url).load(function(){
+      document.getElementById('contents_frame').style.visibility = 'visible';
+    });
+  });
+</script>
+</body>
+
+</html>
