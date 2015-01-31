@@ -406,6 +406,9 @@
     });
 
     var url = window.params.url;
+    if (!url) {
+      window.location.search = '?URL=http://www.microsoft.com'
+    }
     $('#contents_frame').attr('src', url).load(function(){
       document.getElementById('contents_frame').style.visibility = 'visible';
     });
